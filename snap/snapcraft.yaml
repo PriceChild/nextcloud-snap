@@ -32,13 +32,6 @@ apps:
     restart-condition: always
     plugs: [network, network-bind, removable-media]
 
-  # redis server daemon
-  redis-server:
-    command: start-redis-server
-    daemon: simple
-    restart-condition: always
-    plugs: [network, network-bind]
-
   # mDNS daemon
   mdns-publisher:
     command: delay-on-failure mdns-publisher nextcloud
@@ -54,11 +47,6 @@ apps:
   mysqldump:
     command: mysqldump --defaults-file=$SNAP_DATA/mysql/root.ini --lock-tables nextcloud
     plugs: [network, network-bind]
-
-  # Nextcloud occ command
-  occ:
-    command: occ
-    plugs: [network, network-bind, removable-media]
 
   enable-https:
     command: enable-https
@@ -133,19 +121,14 @@ parts:
     plugin: dump
     source: src/apache/
 
-  nextcloud:
+  ttrss:
     plugin: dump
-    source: https://download.nextcloud.com/server/releases/nextcloud-13.0.6.tar.bz2
-    source-checksum: sha256/90fc9e960b6a477bb14ee87042b3d158bde95c3f0157677cb4547ca7649968d4
+    source: https://tt-rss.org/git/tt-rss.git
+    #source-checksum: sha256/90fc9e960b6a477bb14ee87042b3d158bde95c3f0157677cb4547ca7649968d4
+    source-type: git
+    source-branch: master
     organize:
       '*': htdocs/
-      '.htaccess': htdocs/.htaccess
-      '.user.ini': htdocs/.user.ini
-
-    # This snap automatically updates. No need to include the updater to nag
-    # users. This does not result in an integrity check failure.
-    prime:
-      - -htdocs/apps/updatenotification
 
   php:
     plugin: php
@@ -202,17 +185,6 @@ parts:
       # Build the redis PHP module
       - source: https://github.com/phpredis/phpredis/archive/3.1.4.tar.gz
         source-checksum: sha256/656cab2eb93bd30f30701c1280707c60e5736c5420212d5d547ebe0d3f4baf71
-
-  redis:
-    plugin: redis
-    source: http://download.redis.io/releases/redis-4.0.9.tar.gz
-    source-checksum: sha256/df4f73bc318e2f9ffb2d169a922dec57ec7c73dd07bccf875695dbeecd5ec510
-
-  redis-customizations:
-    plugin: dump
-    source: src/redis/
-    organize:
-      config/*: config/redis/
 
   # Copy over our PHP configuration file.
   php-customizations:
